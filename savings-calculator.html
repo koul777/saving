@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>저축 시뮬레이션</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+      max-width: 480px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: #f5f5f5;
+      color: #222;
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 1.5rem;
+      color: #1a1a2e;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: #444;
+    }
+    input {
+      width: 100%;
+      padding: 0.7rem 0.9rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    input:focus {
+      outline: none;
+      border-color: #4a90d9;
+      box-shadow: 0 0 0 2px rgba(74,144,217,0.2);
+    }
+    button {
+      width: 100%;
+      padding: 0.85rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: #2d5a8a;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    button:hover { background: #234a72; }
+    .result {
+      margin-top: 1.5rem;
+    }
+    .result h2 {
+      font-size: 1rem;
+      color: #666;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #eee;
+      font-size: 1rem;
+    }
+    .result-row:last-child { border-bottom: none; }
+    .result-period { color: #555; }
+    .result-amount {
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #1a1a2e;
+    }
+    .hint {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>저축 시뮬레이션</h1>
+  <div class="card">
+    <label for="monthly">매월 저축액 (원)</label>
+    <input type="number" id="monthly" value="500000" min="0" step="10000" placeholder="예: 500000">
+    <span class="hint">매달 꼬박꼬박 넣을 금액</span>
+
+    <label for="rate" style="margin-top: 1rem;">연 수익률 (%)</label>
+    <input type="number" id="rate" value="5" min="0" max="100" step="0.1" placeholder="예: 5">
+    <span class="hint">자산이 매년 이 비율로 증가한다고 가정 (복리)</span>
+
+    <button type="button" onclick="runSimulation()">계산하기</button>
+  </div>
+
+  <div class="card result" id="resultCard">
+    <h2>예상 자산</h2>
+    <div class="result-row">
+      <span class="result-period">3년 후</span>
+      <span class="result-amount" id="result3">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-period">5년 후</span>
+      <span class="result-amount" id="result5">—</span>
+    </div>
+    <div class="result-row">
+      <span class="result-period">10년 후</span>
+      <span class="result-amount" id="result10">—</span>
+    </div>
+  </div>
+
+  <script>
+    function runSimulation() {
+      var monthly = parseFloat(document.getElementById('monthly').value) || 0;
+      var annualRate = parseFloat(document.getElementById('rate').value) || 0;
+
+      if (monthly <= 0) {
+        alert('매월 저축액을 0보다 크게 입력해 주세요.');
+        return;
+      }
+
+      // 연 수익률을 월 수익률로 변환 (복리 기준)
+      // (1 + 연이율) = (1 + 월이율)^12  =>  월이율 = (1+연이율)^(1/12) - 1
+      var monthlyRate = Math.pow(1 + annualRate / 100, 1/12) - 1;
+
+      function futureValue(months) {
+        if (monthlyRate === 0) return monthly * months;
+        // 월말 납입 기준: FV = M * [ ((1+r)^n - 1) / r ]
+        return monthly * (Math.pow(1 + monthlyRate, months) - 1) / monthlyRate;
+      }
+
+      var r3  = Math.round(futureValue(36));
+      var r5  = Math.round(futureValue(60));
+      var r10 = Math.round(futureValue(120));
+
+      document.getElementById('result3').textContent  = r3.toLocaleString('ko-KR') + '원';
+      document.getElementById('result5').textContent  = r5.toLocaleString('ko-KR') + '원';
+      document.getElementById('result10').textContent = r10.toLocaleString('ko-KR') + '원';
+    }
+
+    // 입력 변경 시 자동 계산
+    document.getElementById('monthly').addEventListener('input', runSimulation);
+    document.getElementById('rate').addEventListener('input', runSimulation);
+    runSimulation();
+  </script>
+</body>
+</html>
